@@ -12,8 +12,8 @@ on:
   push:
     branches: 
       - master
-#   schedule:
-#    - cron: 30 19 * * *
+  schedule:
+    - cron: 0 19 * * 5
 
 jobs:
 
