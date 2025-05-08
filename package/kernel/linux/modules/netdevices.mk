@@ -487,7 +487,8 @@ $(eval $(call KernelPackage,phy-airoha-en8811h))
 define KernelPackage/phy-aquantia
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=Aquantia Ethernet PHYs
-  DEPENDS:=+kmod-libphy +kmod-hwmon-core +kmod-lib-crc-ccitt
+  DEPENDS:=+kmod-libphy +kmod-hwmon-core \
+	+!LINUX_6_12:kmod-lib-crc-ccitt +LINUX_6_12:kmod-lib-crc-itu-t
   KCONFIG:=CONFIG_AQUANTIA_PHY
   FILES:=$(LINUX_DIR)/drivers/net/phy/aquantia.ko@lt6.1 \
 	$(LINUX_DIR)/drivers/net/phy/aquantia/aquantia.ko@ge6.1
@@ -588,7 +589,7 @@ $(eval $(call KernelPackage,dsa-realtek))
 
 define KernelPackage/dsa-rtl8366rb
   SUBMENU:=$(NETWORK_DEVICES_MENU)
-  TITLE:=Realtek RTL8365MB switch DSA support
+  TITLE:=Realtek RTL8366RB switch DSA support
   DEPENDS:=+kmod-dsa-realtek @!TARGET_x86 @!TARGET_bcm47xx @!TARGET_uml
   KCONFIG:= \
 	CONFIG_NET_DSA_REALTEK_RTL8366RB \
@@ -1118,7 +1119,6 @@ define KernelPackage/ixgbe
   TITLE:=Intel(R) 82598/82599 PCI-Express 10 Gigabit Ethernet support
   DEPENDS:=@PCI_SUPPORT +kmod-mdio +kmod-ptp +kmod-hwmon-core +kmod-libphy +!LINUX_5_4:kmod-mdio-devres
   KCONFIG:=CONFIG_IXGBE \
-    CONFIG_IXGBE_VXLAN=n \
     CONFIG_IXGBE_HWMON=y \
     CONFIG_IXGBE_DCA=n
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
@@ -1137,7 +1137,6 @@ define KernelPackage/ixgbevf
   TITLE:=Intel(R) 82599 Virtual Function Ethernet support
   DEPENDS:=@PCI_SUPPORT +kmod-ixgbe
   KCONFIG:=CONFIG_IXGBEVF \
-    CONFIG_IXGBE_VXLAN=n \
     CONFIG_IXGBE_HWMON=y \
     CONFIG_IXGBE_DCA=n
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/intel/ixgbevf/ixgbevf.ko
@@ -1154,11 +1153,9 @@ $(eval $(call KernelPackage,ixgbevf))
 define KernelPackage/i40e
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=Intel(R) Ethernet Controller XL710 Family support
-  DEPENDS:=@PCI_SUPPORT +kmod-mdio +kmod-ptp +kmod-hwmon-core +kmod-libphy +LINUX_6_12:kmod-libie
+  DEPENDS:=@PCI_SUPPORT +kmod-ptp +LINUX_6_12:kmod-libie
   KCONFIG:=CONFIG_I40E \
-    CONFIG_I40E_VXLAN=n \
-    CONFIG_I40E_HWMON=y \
-    CONFIG_I40E_DCA=n
+    CONFIG_I40E_DCB=y
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/intel/i40e/i40e.ko
   AUTOLOAD:=$(call AutoProbe,i40e)
 endef
@@ -1329,6 +1326,22 @@ define KernelPackage/hfcmulti/description
 endef
 
 $(eval $(call KernelPackage,hfcmulti))
+
+
+define KernelPackage/hinic
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Huawei Intelligent PCIE Network Interface Card support
+  DEPENDS:=@PCI_SUPPORT @TARGET_x86||TARGET_armvirt_64
+  FILES:=$(LINUX_DIR)/drivers/net/ethernet/huawei/hinic/hinic.ko
+  KCONFIG:=CONFIG_HINIC
+  AUTOLOAD:=$(call AutoProbe,hinic)
+endef
+
+define KernelPackage/hinic/description
+  Kernel module for HiNIC PCIE Ethernet cards
+endef
+
+$(eval $(call KernelPackage,hinic))
 
 
 define KernelPackage/macvlan
@@ -1917,6 +1930,36 @@ define KernelPackage/sfc-falcon/description
 endef
 
 $(eval $(call KernelPackage,sfc-falcon))
+
+
+define KernelPackage/pcs-xpcs
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Synopsis DesignWare PCS driver
+  DEPENDS:=@(TARGET_x86_64||TARGET_armsr) +kmod-phylink +LINUX_6_12:kmod-mdio-devres
+  KCONFIG:=CONFIG_PCS_XPCS
+  FILES:=$(LINUX_DIR)/drivers/net/pcs/pcs_xpcs.ko
+  AUTOLOAD:=$(call AutoLoad,20,pcs_xpcs)
+endef
+
+$(eval $(call KernelPackage,pcs-xpcs))
+
+
+define KernelPackage/stmmac-core
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Synopsis Ethernet Controller core (NXP,STMMicro,others)
+  DEPENDS:=@TARGET_x86_64||TARGET_armsr +kmod-pcs-xpcs +kmod-ptp
+  KCONFIG:=CONFIG_STMMAC_ETH \
+    CONFIG_STMMAC_SELFTESTS=n \
+    CONFIG_STMMAC_PLATFORM \
+    CONFIG_CONFIG_DWMAC_DWC_QOS_ETH=n \
+    CONFIG_DWMAC_GENERIC
+  FILES=$(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/stmmac.ko \
+    $(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/stmmac-platform.ko \
+    $(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/dwmac-generic.ko
+  AUTOLOAD=$(call AutoLoad,40,stmmac stmmac-platform dwmac-generic)
+endef
+
+$(eval $(call KernelPackage,stmmac-core))
 
 
 define KernelPackage/wwan
