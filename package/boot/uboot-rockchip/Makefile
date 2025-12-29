@@ -209,6 +209,8 @@ define U-Boot/radxa-e20c-rk3528
   $(U-Boot/rk3528/Default)
   NAME:=Radxa E20C
   BUILD_DEVICES:= \
+    radxa_rock-2a \
+    radxa_rock-2f \
     radxa_e20c \
     radxa_e24c
 endef
@@ -426,7 +428,8 @@ define U-Boot/sige7-rk3588
   $(U-Boot/rk3588/Default)
   NAME:=Sige7
   BUILD_DEVICES:= \
-    armsom_sige7
+    armsom_sige7 \
+    armsom_w3
 endef
 
 # RK3588S boards
